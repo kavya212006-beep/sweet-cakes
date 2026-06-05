@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northstar Planner</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 35%),
+        radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.16), transparent 30%),
+        linear-gradient(180deg, #020617 0%, #08101d 55%, #0b1220 100%);
+    }
+
+    .orb {
+      filter: blur(26px);
+      opacity: 0.7;
+      animation: drift 16s ease-in-out infinite;
+    }
+
+    .orb.one {
+      animation-duration: 18s;
+    }
+
+    .orb.two {
+      animation-duration: 22s;
+      animation-delay: -5s;
+    }
+
+    .task-item {
+      animation: rise 0.35s ease both;
+      transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+    }
+
+    .task-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .task-item.done .task-title {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
+    .ghost-button {
+      transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    }
+
+    .ghost-button:hover {
+      transform: translateY(-1px);
+    }
+
+    @keyframes drift {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(18px, -14px, 0) scale(1.05); }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased">
+  <div class="relative min-h-screen">
+    <div class="orb one pointer-events-none absolute left-[-5rem] top-[-5rem] h-64 w-64 rounded-full bg-cyan-400/25"></div>
+    <div class="orb two pointer-events-none absolute right-[-4rem] top-40 h-72 w-72 rounded-full bg-sky-500/20"></div>
+
+    <main class="relative mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-6 lg:px-10">
+      <header class="flex items-center justify-between gap-4">
+        <a href="#" class="text-sm font-semibold tracking-[0.35em] text-cyan-200 uppercase">Northstar</a>
+        <button id="clearCompleted" class="ghost-button rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:border-cyan-300/40 hover:bg-cyan-300/10">
+          Clear completed
+        </button>
+      </header>
+
+      <section class="mt-8 grid flex-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+        <div class="max-w-2xl pb-2">
+          <p class="mb-3 text-xs uppercase tracking-[0.35em] text-cyan-300/80">Daily planner</p>
+          <h1 class="text-5xl font-semibold leading-tight sm:text-6xl">
+            Plan the day, keep the pace, finish clean.
+          </h1>
+          <p class="mt-5 max-w-xl text-base leading-7 text-slate-300">
+            Northstar keeps your tasks, progress, and notes in one focused workspace so the next step is always obvious.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="#board" class="ghost-button rounded-full bg-cyan-300 px-5 py-3 text-sm font-medium text-slate-950 hover:bg-cyan-200">
+              Jump to board
+            </a>
+            <a href="#notes" class="ghost-button rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-100 hover:border-white/20 hover:bg-white/10">
+              Open notes
+            </a>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-slate-950/40 backdrop-blur-xl">
+          <form id="taskForm" class="space-y-4">
+            <div>
+              <label for="taskInput" class="mb-2 block text-sm font-medium text-slate-200">New task</label>
+              <input id="taskInput" name="taskInput" type="text" autocomplete="off" maxlength="80" placeholder="e.g. Finish homepage draft"
+                class="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20">
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-[0.9fr_1.1fr]">
+              <div>
+                <label for="prioritySelect" class="mb-2 block text-sm font-medium text-slate-200">Priority</label>
+                <select id="prioritySelect"
+                  class="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div class="flex items-end">
+                <button type="submit" class="ghost-button w-full rounded-2xl bg-cyan-300 px-4 py-3 font-medium text-slate-950 hover:bg-cyan-200">
+                  Add to board
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="mt-6">
+            <div class="mb-2 flex items-center justify-between text-sm text-slate-300">
+              <span>Progress</span>
+              <span id="progressText">0 of 0 done</span>
+            </div>
+            <div class="h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-cyan-300 to-sky-500 transition-[width] duration-500"></div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-2" id="filters" aria-label="Task filters">
+            <button data-filter="all" class="filter-btn rounded-full border border-cyan-300/40 bg-cyan-300/15 px-3 py-1.5 text-xs font-medium text-cyan-100">All</button>
+            <button data-filter="active" class="filter-btn rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300">Active</button>
+            <button data-filter="done" class="filter-btn rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300">Done</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="board" class="mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+        <div>
+          <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">Task board</h2>
+            <p id="boardMeta" class="text-sm text-slate-400">0 tasks</p>
+          </div>
+
+          <ul id="taskList" class="space-y-3"></ul>
+
+          <p id="emptyState" class="mt-3 hidden rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-sm text-slate-400">
+            Add your first task to start the board.
+          </p>
+        </div>
+
+        <aside id="notes" class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-slate-950/25 backdrop-blur-xl">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">Session notes</h2>
+            <span class="text-xs text-slate-500">Saved locally</span>
+          </div>
+          <p class="mt-3 text-sm leading-6 text-slate-400">
+            Capture the one-liner you do not want to forget while you work.
+          </p>
+          <textarea id="notePad" rows="10" placeholder="Write a quick note, blocker, or next move..."
+            class="mt-4 w-full resize-none rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm leading-6 text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"></textarea>
+          <button id="copyNotes" class="ghost-button mt-4 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:border-cyan-300/40 hover:bg-cyan-300/10">
+            Copy notes
+          </button>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const storageKey = 'northstar_tasks_v1';
+    const notesKey = 'northstar_notes_v1';
+
+    const taskForm = document.getElementById('taskForm');
+    const taskInput = document.getElementById('taskInput');
+    const prioritySelect = document.getElementById('prioritySelect');
+    const taskList = document.getElementById('taskList');
+    const emptyState = document.getElementById('emptyState');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const boardMeta = document.getElementById('boardMeta');
+    const clearCompletedBtn = document.getElementById('clearCompleted');
+    const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
+    const notePad = document.getElementById('notePad');
+    const copyNotesBtn = document.getElementById('copyNotes');
+
+    const defaultTasks = [
+      { id: crypto.randomUUID(), text: 'Sketch the homepage layout', priority: 'high', done: false, createdAt: Date.now() - 1800000 },
+      { id: crypto.randomUUID(), text: 'Write the opening copy', priority: 'medium', done: true, createdAt: Date.now() - 1200000 },
+      { id: crypto.randomUUID(), text: 'Review the final spacing', priority: 'low', done: false, createdAt: Date.now() - 600000 }
+    ];
+
+    const state = {
+      tasks: loadTasks(),
+      filter: 'all'
+    };
+
+    notePad.value = localStorage.getItem(notesKey) || '';
+
+    if (state.tasks.length === 0) {
+      state.tasks = defaultTasks;
+      saveTasks();
+    }
+
+    taskForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const text = taskInput.value.trim();
+      if (!text) {
+        taskInput.focus();
+        return;
+      }
+
+      state.tasks.unshift({
+        id: crypto.randomUUID(),
+        text,
+        priority: prioritySelect.value,
+        done: false,
+        createdAt: Date.now()
+      });
+
+      taskInput.value = '';
+      prioritySelect.value = 'medium';
+      saveTasks();
+      render();
+      taskInput.focus();
+    });
+
+    clearCompletedBtn.addEventListener('click', () => {
+      state.tasks = state.tasks.filter((task) => !task.done);
+      saveTasks();
+      render();
+    });
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state.filter = button.dataset.filter;
+        updateFilterUI();
+        render();
+      });
+    });
+
+    notePad.addEventListener('input', () => {
+      localStorage.setItem(notesKey, notePad.value);
+    });
+
+    copyNotesBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(notePad.value || '');
+        copyNotesBtn.textContent = 'Copied';
+        setTimeout(() => (copyNotesBtn.textContent = 'Copy notes'), 1200);
+      } catch {
+        copyNotesBtn.textContent = 'Copy blocked';
+        setTimeout(() => (copyNotesBtn.textContent = 'Copy notes'), 1200);
+      }
+    });
+
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTasks() {
+      localStorage.setItem(storageKey, JSON.stringify(state.tasks));
+    }
+
+    function updateFilterUI() {
+      filterButtons.forEach((button) => {
+        const active = button.dataset.filter === state.filter;
+        button.className = active
+          ? 'filter-btn rounded-full border border-cyan-300/40 bg-cyan-300/15 px-3 py-1.5 text-xs font-medium text-cyan-100'
+          : 'filter-btn rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-white/20 hover:bg-white/10';
+      });
+    }
+
+    function getVisibleTasks() {
+      if (state.filter === 'active') return state.tasks.filter((task) => !task.done);
+      if (state.filter === 'done') return state.tasks.filter((task) => task.done);
+      return state.tasks;
+    }
+
+    function getPriorityLabel(priority) {
+      if (priority === 'high') return 'High';
+      if (priority === 'low') return 'Low';
+      return 'Medium';
+    }
+
+    function priorityClasses(priority) {
+      if (priority === 'high') return 'border-rose-400/30 bg-rose-400/10 text-rose-200';
+      if (priority === 'low') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+      return 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100';
+    }
+
+    function render() {
+      const visibleTasks = getVisibleTasks();
+      const completed = state.tasks.filter((task) => task.done).length;
+      const total = state.tasks.length;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${completed} of ${total} done`;
+      boardMeta.textContent = `${visibleTasks.length} shown of ${total} total`;
+
+      const hasTasks = state.tasks.length > 0;
+      if (!hasTasks) {
+        emptyState.textContent = 'Add your first task to start the board.';
+      } else if (state.filter === 'active') {
+        emptyState.textContent = 'No active tasks to show.';
+      } else if (state.filter === 'done') {
+        emptyState.textContent = 'No completed tasks to show.';
+      } else {
+        emptyState.textContent = 'No tasks to show.';
+      }
+      emptyState.classList.toggle('hidden', visibleTasks.length !== 0);
+      taskList.innerHTML = '';
+
+      visibleTasks.forEach((task, index) => {
+        const item = document.createElement('li');
+        item.className = `task-item rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl ${task.done ? 'done' : ''}`;
+        item.style.animationDelay = `${index * 40}ms`;
+
+        item.innerHTML = `
+          <div class="flex items-start gap-4">
+            <label class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/20 bg-slate-950/60">
+              <input type="checkbox" ${task.done ? 'checked' : ''} aria-label="Mark task complete" class="sr-only task-toggle">
+              <span class="h-2.5 w-2.5 rounded-full ${task.done ? 'bg-cyan-300' : 'bg-transparent'}"></span>
+            </label>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="task-title text-base font-medium text-slate-100">${escapeHtml(task.text)}</p>
+                <span class="rounded-full border px-2.5 py-1 text-[11px] uppercase tracking-[0.22em] ${priorityClasses(task.priority)}">
+                  ${getPriorityLabel(task.priority)}
+                </span>
+              </div>
+              <p class="mt-2 text-sm text-slate-400">Added ${timeAgo(task.createdAt)}</p>
+            </div>
+
+            <button class="delete-btn rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-rose-400/40 hover:bg-rose-400/10 hover:text-rose-100" aria-label="Delete task">
+              Remove
+            </button>
+          </div>
+        `;
+
+        item.querySelector('.task-toggle').addEventListener('change', (event) => {
+          task.done = event.target.checked;
+          saveTasks();
+          render();
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          state.tasks = state.tasks.filter((entry) => entry.id !== task.id);
+          saveTasks();
+          render();
+        });
+
+        taskList.appendChild(item);
+      });
+    }
+
+    function timeAgo(timestamp) {
+      const diff = Math.max(0, Date.now() - timestamp);
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return 'just now';
+      if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+      const days = Math.floor(hours / 24);
+      return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    updateFilterUI();
+    render();
+  </script>
+</body>
+</html>
